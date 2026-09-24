@@ -717,12 +717,34 @@
 
         <!-- Tool Feedback / Report -->
         <div class="settings-section">
-          <div class="settings-sec-title" id="lbl-sec-report">📢 无法统计工具/网页上报</div>
-          <div class="settings-desc" id="lbl-desc-report">输入无法统计 Token 的新工具或网页，作者将在后续更新适配：</div>
+          <div class="settings-sec-title" id="lbl-sec-report">📢 无法统计的工具 / 网页</div>
+          <div class="settings-desc" id="lbl-desc-report">填写后会在浏览器打开 GitHub 提需求页（本应用不联网，本地也留一份记录）：</div>
           <input type="text" id="report-tool-name" class="settings-input" placeholder="工具名称或网页 (如: Trae, Windsurf, 通义灵码...)" />
           <input type="text" id="report-tool-notes" class="settings-input" style="margin-top:6px;" placeholder="补充说明 (如: 安装目录、网页链接等，可选)" />
-          <button class="settings-submit-btn" id="btn-submit-report" onclick="submitToolReport()">🚀 提交适配上报</button>
+          <button class="settings-submit-btn" id="btn-submit-report" onclick="submitToolReport()">🐙 去 GitHub 提需求</button>
           <div id="report-status-msg" class="report-msg"></div>
+        </div>
+
+        <!-- YOLO Auto-Approver Safety -->
+        <div class="settings-section">
+          <div class="settings-sec-title">⚡ 自动点击 (YOLO) 安全设置</div>
+          <div class="settings-desc" style="color:#fca5a5;">
+            ⚠️ 该功能会<b>自动移动鼠标并点击</b>。开启前请确认白名单正确 ——
+            引擎只会点击<b>白名单窗口</b>内匹配到的按钮，并且<b>只截取当前前台窗口</b>的画面，
+            但仍可能误点。默认处于<b>演练模式</b>：只识别、只记录，不动鼠标。
+          </div>
+          <div class="lang-switch-row" style="margin-top:8px;">
+            <button class="lang-pill active" id="yolo-opt-dry" onclick="setYoloPolicy(true)">🧪 演练模式 (推荐)</button>
+            <button class="lang-pill" id="yolo-opt-live" onclick="setYoloPolicy(false)">🖱️ 真实点击</button>
+          </div>
+          <div class="settings-desc" style="margin-top:10px;">
+            白名单进程（逗号分隔，为空 = 永不点击）：
+          </div>
+          <input type="text" id="yolo-whitelist" class="settings-input"
+                 placeholder="claude.exe, code.exe, windowsterminal.exe" />
+          <button class="settings-submit-btn" id="btn-yolo-save" onclick="saveYoloPolicy()">💾 保存白名单</button>
+          <div id="yolo-status-msg" class="report-msg"></div>
+          <div class="settings-desc" id="yolo-runtime" style="margin-top:8px;color:#94a3b8;"></div>
         </div>
       </div>
     </div>
@@ -770,6 +792,7 @@
             <div class="holo-number" id="lbl-total">---</div>
             <div class="holo-delta-tag" id="lbl-delta"></div>
           </div>
+          <div id="lbl-provenance" style="font-size:9px; letter-spacing:0.5px; color:#64748b; margin-top:-6px; margin-bottom:8px;"></div>
 
           <!-- XP Progress Bar + Percentage Only -->
           <div style="margin-bottom:14px;">
@@ -815,6 +838,8 @@
     let currentLang = 'zh'; // 'zh' or 'en'
     var yoloEnabled = false;
     var yoloClicks = 0;
+    var yoloBlocked = 0;
+    var yoloDryRun = true;
     var yoloInitialized = false;
 
     // Hologram Ambient and Point Lights (Defaulted to EVA-01 Spec)
@@ -1249,6 +1274,20 @@
       if (nameDay) nameDay.innerText = isZh ? '本日 (24H)' : 'Today (24H)';
     }
 
+    // The tag inside the LV pill. It used to read "RANK", which advertised a
+    // global leaderboard that no longer exists (and never was real). It now
+    // shows the current stage name, e.g. "熔炉 LV.37".
+    function updateStageTag() {
+      const el = document.getElementById('lbl-rank-tag');
+      if (!el) return;
+      if (currentSkin === 'eva') {
+        el.innerText = 'SYNC';
+        return;
+      }
+      const stage = (cachedStats && cachedStats.level_title) ? cachedStats.level_title : 'LV';
+      el.innerText = stage;
+    }
+
     function applySkin(skinId) {
       currentSkin = (skinId === 'cyan') ? 'cyan' : 'eva';
       const container = document.getElementById('main-container');
@@ -1265,7 +1304,7 @@
 
       const rankTagEl = document.getElementById('lbl-rank-tag');
       if (rankTagEl) {
-        rankTagEl.innerText = (currentSkin === 'eva') ? 'SYNC' : 'RANK';
+        updateStageTag();
       }
 
       const expTitleEl = document.getElementById('lbl-exp-title');
@@ -1360,14 +1399,121 @@
       if (!status) return;
       yoloEnabled = !!status.enabled;
       yoloClicks = status.clicks_total || 0;
+      yoloBlocked = status.blocked_total || 0;
+      yoloDryRun = status.dry_run !== false;
       const btn = document.getElementById('btn-yolo');
       if (!btn) return;
-      if (yoloEnabled) {
-        btn.classList.add('active');
-        btn.innerText = yoloClicks > 0 ? `⚡ YOLO: ON (${yoloClicks})` : `⚡ YOLO: ON`;
-      } else {
+
+      applyYoloPolicyUI(status);
+
+      // opencv/pyautogui are optional. When they are missing the auto-approver
+      // cannot work at all, so say so instead of showing a clickable "OFF".
+      if (status.unavailable) {
+        btn.classList.remove('active');
+        btn.classList.add('disabled');
+        btn.innerText = (currentLang === 'zh') ? '⚡ YOLO: 不可用' : '⚡ YOLO: N/A';
+        btn.title = status.reason || '';
+        btn.style.opacity = '0.45';
+        btn.style.cursor = 'not-allowed';
+        return;
+      }
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+
+      if (!yoloEnabled) {
         btn.classList.remove('active');
         btn.innerText = `⚡ YOLO: OFF`;
+        btn.title = (currentLang === 'zh') ? '未启动' : 'stopped';
+        return;
+      }
+
+      // The button must never read as a plain "ON": a live clicker and a
+      // dry-run observer are very different states and the label has to say
+      // which one is active, plus how many hits were blocked by the gates.
+      btn.classList.add('active');
+      const blocked = yoloBlocked > 0 ? ` / ${yoloBlocked}✕` : '';
+      btn.innerText = yoloDryRun
+        ? `⚡ 演练 ${yoloClicks}${blocked}`
+        : `⚡ YOLO ON ${yoloClicks}${blocked}`;
+      btn.title = yoloDryRun
+        ? (currentLang === 'zh' ? '演练模式：只识别不点击' : 'DRY RUN: detect only')
+        : (currentLang === 'zh' ? '真实点击已开启' : 'LIVE clicking enabled');
+    }
+
+    function applyYoloPolicyUI(status) {
+      const dryBtn = document.getElementById('yolo-opt-dry');
+      const liveBtn = document.getElementById('yolo-opt-live');
+      if (dryBtn && liveBtn) {
+        dryBtn.classList.toggle('active', yoloDryRun);
+        liveBtn.classList.toggle('active', !yoloDryRun);
+      }
+      const input = document.getElementById('yolo-whitelist');
+      if (input && document.activeElement !== input) {
+        input.value = (status.whitelist_processes || []).join(', ');
+      }
+      const runtime = document.getElementById('yolo-runtime');
+      if (runtime) {
+        const zh = currentLang === 'zh';
+        const wl = (status.whitelist_processes || []).length;
+        const parts = [];
+        parts.push(zh ? `白名单 ${wl} 项` : `${wl} whitelisted`);
+        parts.push(zh ? `已点击 ${status.clicks_total || 0}` : `clicked ${status.clicks_total || 0}`);
+        parts.push(zh ? `已拦截 ${status.blocked_total || 0}` : `blocked ${status.blocked_total || 0}`);
+        if (status.last_window) {
+          parts.push((zh ? '当前窗口 ' : 'focus ') + status.last_window);
+        }
+        if (status.last_block_reason) {
+          parts.push((zh ? '最近拦截原因：' : 'last block: ') + status.last_block_reason);
+        }
+        runtime.innerText = parts.join(' · ');
+      }
+    }
+
+    async function setYoloPolicy(dryRun) {
+      yoloDryRun = !!dryRun;
+      applyYoloPolicyUI({
+        dry_run: yoloDryRun,
+        whitelist_processes: [],
+        clicks_total: yoloClicks,
+        blocked_total: yoloBlocked
+      });
+      const msg = document.getElementById('yolo-status-msg');
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.set_yolo_policy) {
+        try {
+          const res = await window.pywebview.api.set_yolo_policy(dryRun, null);
+          if (res && res.status) updateYoloUI(res.status);
+          if (msg) {
+            msg.style.color = dryRun ? '#34d399' : '#fca5a5';
+            msg.innerText = dryRun
+              ? '✓ 已切换为演练模式（不会点击）'
+              : '⚠️ 已开启真实点击，请确认白名单';
+            setTimeout(() => { msg.innerText = ''; }, 4000);
+          }
+        } catch (e) {
+          if (msg) { msg.style.color = '#f43f5e'; msg.innerText = 'Error: ' + e; }
+        }
+      }
+    }
+
+    async function saveYoloPolicy() {
+      const input = document.getElementById('yolo-whitelist');
+      const msg = document.getElementById('yolo-status-msg');
+      const raw = input ? input.value : '';
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.set_yolo_policy) {
+        try {
+          const res = await window.pywebview.api.set_yolo_policy(null, raw);
+          if (res && res.status) updateYoloUI(res.status);
+          const n = ((res && res.whitelist_processes) || []).length;
+          if (msg) {
+            msg.style.color = n ? '#34d399' : '#fca5a5';
+            msg.innerText = n
+              ? `✓ 已保存 ${n} 项白名单`
+              : '⚠️ 白名单为空：引擎将拒绝点击任何窗口';
+            setTimeout(() => { msg.innerText = ''; }, 4000);
+          }
+        } catch (e) {
+          if (msg) { msg.style.color = '#f43f5e'; msg.innerText = 'Error: ' + e; }
+        }
       }
     }
 
@@ -1410,6 +1556,34 @@
       // Level (Top Distinctive Sci-Fi Badge - Just LV X)
       const lv = stats.level || 1;
       document.getElementById('lbl-level').innerText = `LV.${lv}`;
+      updateStageTag();
+
+      // Data provenance. Part of the total can come from API usage logs (real)
+      // and part from file-size estimation (a guess). Saying which is which is
+      // the difference between a metric and a decoration.
+      const prov = document.getElementById('lbl-provenance');
+      if (prov) {
+        const q = stats.quality || {};
+        const v = stats.verified_tokens || 0;
+        const e = stats.estimated_tokens || 0;
+        const zh = (currentLang === 'zh');
+        if (e <= 0) {
+          prov.innerText = zh
+            ? `实测用量 · ${q.series_source === 'usage-ledger' ? '按天数据来自用量日志' : ''}`
+            : `VERIFIED USAGE${q.series_source === 'usage-ledger' ? ' · daily series from usage log' : ''}`;
+          prov.style.color = '#34d399';
+        } else if (v <= 0) {
+          prov.innerText = zh
+            ? '⚠ 全部为文件体积估算，非实测用量'
+            : '⚠ ALL ESTIMATED from file size - not measured';
+          prov.style.color = '#fbbf24';
+        } else {
+          prov.innerText = zh
+            ? `实测 ${formatNumberDisplay(v, 'zh')} + 估算 ${formatNumberDisplay(e, 'zh')}`
+            : `verified ${formatNumberDisplay(v, 'en')} + estimated ${formatNumberDisplay(e, 'en')}`;
+          prov.style.color = '#94a3b8';
+        }
+      }
 
       // XP Progress Bar - Only %
       const pct = stats.level_pct || 0;
@@ -1438,6 +1612,12 @@
       const isZh = (currentLang === 'zh');
       document.getElementById('lang-opt-zh').className = 'lang-pill' + (isZh ? ' active' : '');
       document.getElementById('lang-opt-en').className = 'lang-pill' + (!isZh ? ' active' : '');
+
+      // Keep the YOLO policy controls in sync with the running engine whenever
+      // the panel opens.
+      if (cachedStats && cachedStats.yolo) {
+        updateYoloUI(cachedStats.yolo);
+      }
       
       const optCyan = document.getElementById('skin-opt-cyan');
       const optEva = document.getElementById('skin-opt-eva');
@@ -1451,9 +1631,11 @@
       document.getElementById('lbl-settings-header').innerText = isZh ? '⚙️ 系统设置 // SETTINGS' : '⚙️ SETTINGS // 系统设置';
       document.getElementById('lbl-sec-skin').innerText = isZh ? '🎨 核心视觉皮肤 (THEME SKIN)' : '🎨 VISUAL CORE SKIN';
       document.getElementById('lbl-sec-lang').innerText = isZh ? '🌐 界面语言 (LANGUAGE)' : '🌐 LANGUAGE PREFERENCE';
-      document.getElementById('lbl-sec-report').innerText = isZh ? '📢 无法统计工具/网页上报' : '📢 REPORT UNTRACKED TOOL / SITE';
-      document.getElementById('lbl-desc-report').innerText = isZh ? '输入无法统计 Token 的新工具或网页，作者将在后续更新适配：' : 'Report unmonitored tools or web URLs for future updates:';
-      document.getElementById('btn-submit-report').innerText = isZh ? '🚀 提交适配上报' : '🚀 SUBMIT REPORT';
+      document.getElementById('lbl-sec-report').innerText = isZh ? '📢 无法统计的工具 / 网页' : '📢 UNTRACKED TOOL / SITE';
+      document.getElementById('lbl-desc-report').innerText = isZh
+        ? '填写后会在浏览器打开 GitHub 提需求页（本应用不联网，本地也留一份记录）：'
+        : 'Opens a GitHub issue in your browser (this app is offline; a local copy is kept too):';
+      document.getElementById('btn-submit-report').innerText = isZh ? '🐙 去 GitHub 提需求' : '🐙 OPEN GITHUB ISSUE';
       document.getElementById('btn-settings').innerText = isZh ? '⚙️ 设置' : '⚙️ Settings';
 
       if (currentSkin === 'eva') {
@@ -1495,22 +1677,25 @@
         return;
       }
 
-      msgEl.innerText = (currentLang === 'zh') ? '⏳ 正在提交...' : '⏳ Submitting...';
+      msgEl.innerText = (currentLang === 'zh') ? '⏳ 正在打开 GitHub...' : '⏳ Opening GitHub...';
       msgEl.style.color = (currentSkin === 'eva') ? '#00ff66' : '#38bdf8';
 
       try {
+        let opened = false;
         if (window.pywebview && window.pywebview.api) {
-          await window.pywebview.api.submit_tool_report(toolName, notes);
+          opened = await window.pywebview.api.submit_tool_report(toolName, notes);
         }
         nameInput.value = '';
         notesInput.value = '';
-        msgEl.innerText = (currentLang === 'zh') ? '✓ 上报成功！感谢支持，作者后续将适配！' : '✓ Report submitted! Thank you!';
-        msgEl.style.color = '#34d399';
+        msgEl.innerText = opened
+          ? ((currentLang === 'zh') ? '✓ 已在浏览器打开 GitHub 提需求页，提交后作者就能看到' : '✓ GitHub issue opened in your browser')
+          : ((currentLang === 'zh') ? '⚠️ 没能自动打开浏览器，请手动到 GitHub 提 issue' : '⚠️ Could not open the browser - please file the issue manually');
+        msgEl.style.color = opened ? '#34d399' : '#f59e0b';
         setTimeout(() => {
           msgEl.innerText = '';
-        }, 3500);
+        }, 5000);
       } catch (err) {
-        msgEl.innerText = 'Error submitting report';
+        msgEl.innerText = (currentLang === 'zh') ? '打开失败，请手动到 GitHub 提 issue' : 'Failed - please file the issue manually';
         msgEl.style.color = '#f43f5e';
       }
     }
