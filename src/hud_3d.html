@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>TokenBurner 3D Hologram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body {
+      background: transparent !important;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+    }
+
+    /* -------------------------------------------------------------
+       THEME SYSTEM: VARIABLES & PALETTES (CYAN vs EVA-01)
+       ------------------------------------------------------------- */
+    :root {
+      --theme-bg: linear-gradient(145deg, rgba(8, 16, 32, 0.88) 0%, rgba(4, 9, 20, 0.92) 100%);
+      --theme-border: rgba(56, 189, 248, 0.45);
+      --theme-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(2, 132, 199, 0.3), inset 0 0 20px rgba(14, 165, 233, 0.15);
+      --theme-corner: #38bdf8;
+      --theme-orb: #38bdf8;
+      --theme-header-border: rgba(56, 189, 248, 0.15);
+      --theme-title: #7dd3fc;
+      --theme-title-glow: rgba(56, 189, 248, 0.6);
+      --theme-pill-bg: rgba(14, 165, 233, 0.12);
+      --theme-pill-border: rgba(56, 189, 248, 0.35);
+      --theme-settings-btn-color: #38bdf8;
+      --theme-settings-btn-bg: rgba(14, 165, 233, 0.2);
+      --theme-settings-btn-border: rgba(56, 189, 248, 0.45);
+      --theme-badge-color: #38bdf8;
+      --theme-badge-bg: rgba(14, 165, 233, 0.15);
+      --theme-badge-border: rgba(56, 189, 248, 0.35);
+      --theme-lv-pill-bg: rgba(14, 165, 233, 0.16);
+      --theme-lv-pill-border: rgba(56, 189, 248, 0.5);
+      --theme-lv-pill-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+      --theme-lv-tag: #38bdf8;
+      --theme-lv-val: #facc15;
+      --theme-number-color: #e0f2fe;
+      --theme-number-shadow: 0 0 20px rgba(56, 189, 248, 0.95), 0 0 35px rgba(14, 165, 233, 0.65);
+      --theme-xp-pct: #38bdf8;
+      --theme-xp-bar: linear-gradient(90deg, #0284c7, #38bdf8);
+      --theme-xp-bar-glow: 0 0 12px #38bdf8;
+      --theme-xp-track-border: rgba(56, 189, 248, 0.3);
+      --theme-share-bg: linear-gradient(135deg, rgba(2, 132, 199, 0.95) 0%, rgba(3, 105, 161, 0.95) 50%, rgba(15, 118, 110, 0.95) 100%);
+      --theme-share-border: rgba(56, 189, 248, 0.75);
+      --theme-share-shadow: 0 0 20px rgba(2, 132, 199, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.25);
+      --theme-share-hover-bg: linear-gradient(135deg, rgba(14, 165, 233, 1) 0%, rgba(2, 132, 199, 1) 50%, rgba(20, 184, 166, 1) 100%);
+      --theme-share-hover-shadow: 0 0 25px rgba(56, 189, 248, 0.9);
+      --theme-menu-bg: rgba(6, 14, 30, 0.95);
+      --theme-menu-border: rgba(56, 189, 248, 0.55);
+      --theme-menu-shadow: 0 0 25px rgba(2, 132, 199, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.2);
+      --theme-menu-item-border: rgba(56, 189, 248, 0.18);
+      --theme-menu-item-hover-border: #38bdf8;
+      --theme-menu-item-hover-bg: rgba(14, 165, 233, 0.28);
+      --theme-menu-active-border: #38bdf8;
+      --theme-menu-active-color: #38bdf8;
+      --theme-menu-active-bg: linear-gradient(135deg, rgba(2, 132, 199, 0.45) 0%, rgba(3, 105, 161, 0.25) 100%);
+      --theme-menu-active-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    /* EVA Unit-01 Tactical Theme Overrides */
+    .holo-container.theme-eva {
+      --theme-bg: linear-gradient(145deg, rgba(22, 6, 40, 0.94) 0%, rgba(10, 2, 20, 0.97) 100%);
+      --theme-border: rgba(0, 255, 102, 0.55);
+      --theme-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(147, 51, 234, 0.5), 0 0 12px rgba(0, 255, 102, 0.3), inset 0 0 20px rgba(126, 34, 206, 0.25);
+      --theme-corner: #00ff66;
+      --theme-orb: #00ff66;
+      --theme-header-border: rgba(0, 255, 102, 0.25);
+      --theme-title: #00ff66;
+      --theme-title-glow: rgba(0, 255, 102, 0.85);
+      --theme-pill-bg: rgba(88, 28, 135, 0.35);
+      --theme-pill-border: rgba(0, 255, 102, 0.5);
+      --theme-settings-btn-color: #00ff66;
+      --theme-settings-btn-bg: rgba(88, 28, 135, 0.45);
+      --theme-settings-btn-border: rgba(0, 255, 102, 0.5);
+      --theme-badge-color: #00ff66;
+      --theme-badge-bg: rgba(88, 28, 135, 0.45);
+      --theme-badge-border: rgba(0, 255, 102, 0.5);
+      --theme-lv-pill-bg: rgba(88, 28, 135, 0.45);
+      --theme-lv-pill-border: rgba(0, 255, 102, 0.7);
+      --theme-lv-pill-shadow: 0 0 16px rgba(0, 255, 102, 0.4), 0 0 24px rgba(126, 34, 206, 0.4);
+      --theme-lv-tag: #00ff66;
+      --theme-lv-val: #00ff66;
+      --theme-number-color: #f0fdf4;
+      --theme-number-shadow: 0 0 20px rgba(0, 255, 102, 0.95), 0 0 35px rgba(147, 51, 234, 0.75);
+      --theme-xp-pct: #00ff66;
+      --theme-xp-bar: linear-gradient(90deg, #7e22ce 0%, #a855f7 40%, #00ff66 100%);
+      --theme-xp-bar-glow: 0 0 14px #00ff66;
+      --theme-xp-track-border: rgba(0, 255, 102, 0.35);
+      --theme-share-bg: linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(126, 34, 206, 0.95) 50%, rgba(13, 148, 136, 0.95) 100%);
+      --theme-share-border: rgba(0, 255, 102, 0.85);
+      --theme-share-shadow: 0 0 22px rgba(0, 255, 102, 0.45), inset 0 0 12px rgba(168, 85, 247, 0.45);
+      --theme-share-hover-bg: linear-gradient(135deg, rgba(126, 34, 206, 1) 0%, rgba(147, 51, 234, 1) 40%, rgba(0, 255, 102, 1) 100%);
+      --theme-share-hover-shadow: 0 0 26px rgba(0, 255, 102, 0.9);
+      --theme-menu-bg: rgba(18, 5, 34, 0.96);
+      --theme-menu-border: rgba(0, 255, 102, 0.6);
+      --theme-menu-shadow: 0 0 25px rgba(147, 51, 234, 0.5), inset 0 0 12px rgba(0, 255, 102, 0.2);
+      --theme-menu-item-border: rgba(0, 255, 102, 0.22);
+      --theme-menu-item-hover-border: #00ff66;
+      --theme-menu-item-hover-bg: rgba(126, 34, 206, 0.35);
+      --theme-menu-active-border: #00ff66;
+      --theme-menu-active-color: #00ff66;
+      --theme-menu-active-bg: linear-gradient(135deg, rgba(126, 34, 206, 0.5) 0%, rgba(88, 28, 135, 0.4) 100%);
+      --theme-menu-active-shadow: 0 0 12px rgba(0, 255, 102, 0.45);
+    }
+
+    /* Holographic Floating Island */
+    .holo-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--theme-bg);
+      border-radius: 20px;
+      border: 1px solid var(--theme-border);
+      box-shadow: var(--theme-shadow);
+      overflow: hidden;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Sci-Fi Holographic Projection Grid */
+    .holo-grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(rgba(56, 189, 248, 0.025) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(56, 189, 248, 0.025) 1px, transparent 1px);
+      background-size: 16px 16px;
+      border-radius: 20px;
+    }
+
+    /* Sci-Fi Holographic Corner Brackets */
+    .holo-corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--theme-corner);
+      border-style: solid;
+      pointer-events: none;
+      filter: drop-shadow(0 0 5px var(--theme-corner));
+      z-index: 10;
+      transition: border-color 0.3s ease, filter 0.3s ease;
+    }
+    .corner-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; border-top-left-radius: 14px; }
+    .corner-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; border-top-right-radius: 14px; }
+    .corner-bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; border-bottom-left-radius: 14px; }
+    .corner-br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; border-bottom-right-radius: 14px; }
+
+    /* Top Drag Bar */
+    .holo-header {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      cursor: grab;
+      -webkit-app-region: drag;
+      border-bottom: 1px solid var(--theme-header-border);
+      z-index: 20;
+      flex-wrap: nowrap;
+      overflow: hidden;
+      transition: border-color 0.3s ease;
+    }
+    .holo-title-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--theme-pill-bg);
+      border: 1px solid var(--theme-pill-border);
+      padding: 3px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      flex-shrink: 1;
+      min-width: 0;
+      transition: all 0.3s ease;
+    }
+    .holo-orb {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--theme-orb);
+      box-shadow: 0 0 10px var(--theme-orb);
+      animation: holoPulse 1.8s infinite ease-in-out;
+      flex-shrink: 0;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    @keyframes holoPulse {
+      0%, 100% { transform: scale(0.85); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+    .holo-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--theme-title);
+      text-shadow: 0 0 8px var(--theme-title-glow);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .holo-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      -webkit-app-region: no-drag;
+    }
+    /* YOLO auto-approver toggle button */
+    .holo-yolo-btn {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+      background: rgba(148, 163, 184, 0.1);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      padding: 3px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+    .holo-yolo-btn:hover { filter: brightness(1.25); }
+    .holo-yolo-btn.active {
+      color: #00ff66;
+      background: rgba(0, 255, 102, 0.18);
+      border-color: rgba(0, 255, 102, 0.65);
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.35);
+      animation: yoloPulse 1.6s infinite ease-in-out;
+    }
+    @keyframes yoloPulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 102, 0.25); }
+      50% { box-shadow: 0 0 14px rgba(0, 255, 102, 0.7); }
+    }
+    /* Per-burst delta badge next to main counter — collapses to zero when hidden */
+    .holo-delta-tag {
+      font-size: 13px;
+      font-weight: 800;
+      color: #00ff66;
+      font-family: Consolas, monospace;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      border-radius: 6px;
+      background: rgba(0, 255, 102, 0.12);
+      border: 1px solid rgba(0, 255, 102, 0.4);
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.8);
+      /* Hidden: zero space, no border */
+      max-width: 0;
+      overflow: hidden;
+      padding: 0;
+      border-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: max-width 0.35s ease, opacity 0.3s ease, padding 0.3s ease, border-width 0.3s ease;
+    }
+    .holo-delta-tag.visible {
+      max-width: 120px;
+      opacity: 1;
+      padding: 1px 7px;
+      border-width: 1px;
+      animation: deltaPop 1.4s infinite alternate ease-in-out;
+    }
+    @keyframes deltaPop {
+      0%   { transform: translateY(0) scale(1);    text-shadow: 0 0 6px rgba(0,255,102,0.5); }
+      100% { transform: translateY(-2px) scale(1.05); text-shadow: 0 0 14px rgba(0,255,102,0.95); }
+    }
+    .holo-settings-btn {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--theme-settings-btn-color);
+      background: var(--theme-settings-btn-bg);
+      border: 1px solid var(--theme-settings-btn-border);
+      padding: 3px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .holo-settings-btn:hover {
+      filter: brightness(1.25);
+    }
+    .holo-close {
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .holo-close:hover {
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.2);
+    }
+
+    /* Holographic Settings Modal Overlay */
+    .holo-settings-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 12, 26, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 60;
+      display: none;
+      flex-direction: column;
+      padding: 12px 16px;
+      animation: settingsFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 30px rgba(2, 132, 199, 0.4), inset 0 0 20px rgba(14, 165, 233, 0.1);
+    }
+    @keyframes settingsFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      margin-bottom: 10px;
+      -webkit-app-region: drag;
+    }
+    .settings-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #7dd3fc;
+      letter-spacing: 0.8px;
+    }
+    .settings-close {
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      -webkit-app-region: no-drag;
+    }
+    .settings-close:hover {
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.2);
+    }
+    .settings-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-app-region: no-drag;
+    }
+    .settings-section {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .settings-sec-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    .settings-desc {
+      font-size: 9px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .lang-switch-row {
+      display: flex;
+      gap: 8px;
+    }
+    .lang-pill {
+      flex: 1;
+      padding: 6px 0;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .lang-pill:hover {
+      border-color: #38bdf8;
+      color: #f8fafc;
+    }
+    .lang-pill.active {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+    }
+    .settings-input {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 10px;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      color: #f8fafc;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .settings-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.45);
+    }
+    .settings-submit-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 0;
+      background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+      border: 1px solid rgba(45, 212, 191, 0.6);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 12px rgba(13, 148, 136, 0.4);
+    }
+    .settings-submit-btn:hover {
+      background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+      box-shadow: 0 0 18px rgba(20, 184, 166, 0.7);
+      transform: translateY(-1px);
+    }
+    .settings-submit-btn:active {
+      transform: translateY(1px);
+    }
+    .report-msg {
+      font-size: 9px;
+      text-align: center;
+      margin-top: 5px;
+      min-height: 14px;
+      font-weight: bold;
+    }
+
+    /* Main Hologram Stage */
+    .holo-stage {
+      flex: 1;
+      height: calc(100vh - 34px);
+      display: flex;
+      position: relative;
+      z-index: 15;
+    }
+
+    /* 3D WebGL Canvas Area (100% Transparent, floating 3D Crystal) */
+    #canvas-container {
+      width: 165px;
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+    }
+    #three-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .holo-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--theme-badge-color);
+      background: var(--theme-badge-bg);
+      border: 1px solid var(--theme-badge-border);
+      padding: 2px 9px;
+      border-radius: 8px;
+      white-space: nowrap;
+      text-shadow: 0 0 6px var(--theme-badge-color);
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    /* Right Stats Floating Projection */
+    .holo-stats {
+      flex: 1;
+      padding: 12px 18px 14px 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .holo-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+    }
+
+    /* Distinctive Stylized LV Pill */
+    .holo-lv-pill {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      background: var(--theme-lv-pill-bg);
+      border: 1px solid var(--theme-lv-pill-border);
+      padding: 3px 12px;
+      border-radius: 12px;
+      box-shadow: var(--theme-lv-pill-shadow);
+      transition: all 0.3s ease;
+    }
+    .lv-tag {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--theme-lv-tag);
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 8px var(--theme-lv-tag);
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .lv-val {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--theme-lv-val);
+      text-shadow: 0 0 16px var(--theme-lv-val), 0 0 26px var(--theme-lv-val);
+      letter-spacing: 1px;
+      line-height: 1;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    /* Giant 3D Holographic Numbers */
+    .counter-row {
+      display: flex;
+      align-items: baseline;
+      margin: 4px 0 10px 0;
+      gap: 6px;
+    }
+    .holo-number {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--theme-number-color);
+      text-shadow: var(--theme-number-shadow);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    /* Hologram Pulse Streak */
+    .holo-streak {
+      font-size: 11px;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: 7px;
+      min-height: 16px;
+    }
+    .burst-flare {
+      color: #34d399 !important;
+      text-shadow: 0 0 14px rgba(52, 211, 153, 0.9);
+      animation: holoShake 0.4s ease;
+    }
+    @keyframes holoShake {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Single Primary Action Button: Share */
+    .holo-actions {
+      display: flex;
+      width: 100%;
+      -webkit-app-region: no-drag;
+    }
+    .h-btn-share {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--theme-share-border);
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border-radius: 12px;
+      background: var(--theme-share-bg);
+      color: #ffffff;
+      box-shadow: var(--theme-share-shadow);
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .h-btn-share:hover {
+      background: var(--theme-share-hover-bg);
+      box-shadow: var(--theme-share-hover-shadow);
+      transform: translateY(-1px);
+    }
+    .h-btn-share:active {
+      transform: translateY(1px);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+
+    /* Holographic Period Selector Popup Menu */
+    .holo-period-menu {
+      position: absolute;
+      top: 10px;
+      left: 8px;
+      width: 148px;
+      background: var(--theme-menu-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--theme-menu-border);
+      border-radius: 12px;
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 50;
+      box-shadow: var(--theme-menu-shadow);
+      animation: periodMenuFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s ease;
+    }
+    @keyframes periodMenuFade {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .period-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--theme-menu-item-border);
+      background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .period-item:hover {
+      border-color: var(--theme-menu-item-hover-border);
+      color: #f8fafc;
+      background: var(--theme-menu-item-hover-bg);
+    }
+    .period-item.active {
+      border-color: var(--theme-menu-active-border);
+      color: var(--theme-menu-active-color);
+      background: var(--theme-menu-active-bg);
+      box-shadow: var(--theme-menu-active-shadow);
+    }
+    .period-item-icon {
+      font-size: 12px;
+      line-height: 1;
+    }
+    .period-item-name {
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="holo-container theme-eva" id="main-container">
+    <!-- Holographic Sci-Fi Corner Brackets -->
+    <div class="holo-corner corner-tl"></div>
+    <div class="holo-corner corner-tr"></div>
+    <div class="holo-corner corner-bl"></div>
+    <div class="holo-corner corner-br"></div>
+
+    <!-- Holographic Subtle Grid -->
+    <div class="holo-grid"></div>
+
+    <!-- Top Drag Bar -->
+    <div class="holo-header">
+      <div class="holo-title-pill">
+        <div class="holo-orb"></div>
+        <span class="holo-title" id="header-title">EVA-01 TEST TYPE // 初号机全息核心</span>
+      </div>
+      <div class="holo-header-controls">
+        <button class="holo-yolo-btn" id="btn-yolo" onclick="toggleYolo()">&#x26A1; YOLO: OFF</button>
+        <button class="holo-settings-btn" id="btn-settings" onclick="openSettings()">⚙️ 设置</button>
+        <div class="holo-close" onclick="pyCloseApp()">✕</div>
+      </div>
+    </div>
+
+    <!-- Holographic Settings Modal Overlay -->
+    <div class="holo-settings-modal" id="settings-modal">
+      <div class="settings-header">
+        <div class="settings-title" id="lbl-settings-header">⚙️ 系统设置 // SETTINGS</div>
+        <div class="settings-close" onclick="closeSettings()">✕</div>
+      </div>
+      <div class="settings-body">
+        <!-- Theme Skin Switch -->
+        <div class="settings-section">
+          <div class="settings-sec-title" id="lbl-sec-skin">🎨 核心视觉皮肤 (THEME SKIN)</div>
+          <div class="lang-switch-row">
+            <button class="lang-pill" id="skin-opt-cyan" onclick="selectSkin('cyan')">🔷 量子冰蓝</button>
+            <button class="lang-pill active" id="skin-opt-eva" onclick="selectSkin('eva')">🟣 EVA 初号机</button>
+          </div>
+        </div>
+
+        <!-- Language Switch -->
+        <div class="settings-section">
+          <div class="settings-sec-title" id="lbl-sec-lang">🌐 界面语言 (LANGUAGE)</div>
+          <div class="lang-switch-row">
+            <button class="lang-pill active" id="lang-opt-zh" onclick="selectLanguage('zh')">简体中文</button>
+            <button class="lang-pill" id="lang-opt-en" onclick="selectLanguage('en')">English</button>
+          </div>
+        </div>
+
+        <!-- Tool Feedback / Report -->
+        <div class="settings-section">
+          <div class="settings-sec-title" id="lbl-sec-report">📢 无法统计工具/网页上报</div>
+          <div class="settings-desc" id="lbl-desc-report">输入无法统计 Token 的新工具或网页，作者将在后续更新适配：</div>
+          <input type="text" id="report-tool-name" class="settings-input" placeholder="工具名称或网页 (如: Trae, Windsurf, 通义灵码...)" />
+          <input type="text" id="report-tool-notes" class="settings-input" style="margin-top:6px;" placeholder="补充说明 (如: 安装目录、网页链接等，可选)" />
+          <button class="settings-submit-btn" id="btn-submit-report" onclick="submitToolReport()">🚀 提交适配上报</button>
+          <div id="report-status-msg" class="report-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Holographic Stage -->
+    <div class="holo-stage">
+      <!-- 3D Three.js WebGL Core (No Background, Pure Floating 3D Crystal) -->
+      <div id="canvas-container" onclick="togglePeriodMenu(event)">
+        <!-- Holographic Period Selector Popup Menu -->
+        <div class="holo-period-menu" id="period-menu" onclick="event.stopPropagation()">
+          <div class="period-item active" id="p-opt-total" onclick="selectPeriod('total')">
+            <span class="period-item-icon">🪐</span>
+            <span class="period-item-name" id="p-name-total">累计 (ALL)</span>
+          </div>
+          <div class="period-item" id="p-opt-month" onclick="selectPeriod('month')">
+            <span class="period-item-icon">🗓️</span>
+            <span class="period-item-name" id="p-name-month">本月 (30D)</span>
+          </div>
+          <div class="period-item" id="p-opt-week" onclick="selectPeriod('week')">
+            <span class="period-item-icon">📅</span>
+            <span class="period-item-name" id="p-name-week">本周 (7D)</span>
+          </div>
+          <div class="period-item" id="p-opt-day" onclick="selectPeriod('day')">
+            <span class="period-item-icon">⚡</span>
+            <span class="period-item-name" id="p-name-day">本日 (24H)</span>
+          </div>
+        </div>
+
+        <div class="holo-badge" id="crystal-status">🪐 ALL // EVA-01</div>
+      </div>
+
+      <!-- Right Side Metrics & Controls -->
+      <div class="holo-stats">
+        <div>
+          <!-- Top Row: Only Distinctive LV -->
+          <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:5px;">
+            <div class="holo-lv-pill">
+              <span class="lv-tag" id="lbl-rank-tag">SYNC</span>
+              <span class="lv-val" id="lbl-level">LV.1</span>
+            </div>
+          </div>
+
+          <!-- Giant Token Counter -->
+          <div class="counter-row">
+            <div class="holo-number" id="lbl-total">---</div>
+            <div class="holo-delta-tag" id="lbl-delta"></div>
+          </div>
+
+          <!-- XP Progress Bar + Percentage Only -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px;">
+              <span id="lbl-exp-title" style="font-size:10px; color:#64748b; font-weight:700; letter-spacing:0.8px;">SYNC RATE PROGRESS</span>
+              <span id="lbl-xp-pct" style="font-size:12px; font-weight:800; color:var(--theme-xp-pct); font-family:Consolas, monospace;">0.0%</span>
+            </div>
+            <div style="background:#0f172a; height:6px; border-radius:3px; overflow:hidden; border:1px solid var(--theme-xp-track-border);">
+              <div id="xp-bar" style="background:var(--theme-xp-bar); height:100%; width:0%; box-shadow:var(--theme-xp-bar-glow);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Primary Action Button: Share -->
+        <div class="holo-actions">
+          <button class="h-btn-share" id="btn-share" onclick="pyExportPoster()">
+            <span>⚡</span>
+            <span id="lbl-btn-share">同步战报</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="three.min.js"></script>
+  <script>
+    // -------------------------------------------------------------
+    // THREE.JS HOLOGRAPHIC TRANSPARENT 3D SCENE
+    // -------------------------------------------------------------
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.z = 4.2;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0); // 100% Alpha Transparent
+    container.appendChild(renderer.domElement);
+
+    // Default Skin & Language State
+    let currentSkin = 'eva'; // 'eva' or 'cyan'
+    let currentLang = 'zh'; // 'zh' or 'en'
+    var yoloEnabled = false;
+    var yoloClicks = 0;
+    var yoloInitialized = false;
+
+    // Hologram Ambient and Point Lights (Defaulted to EVA-01 Spec)
+    const ambientLight = new THREE.AmbientLight(0x2e0854, 3.2);
+    scene.add(ambientLight);
+
+    const pointLight1 = new THREE.PointLight(0x00ff66, 3.8, 25);
+    pointLight1.position.set(3, 4, 3);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0xa855f7, 3.0, 20);
+    pointLight2.position.set(-3, -3, 2);
+    scene.add(pointLight2);
+
+    // 3D Core Group
+    const coreGroup = new THREE.Group();
+    scene.add(coreGroup);
+
+    // Object A: Translucent Holographic Icosahedron Prism (EVA Deep Purple)
+    const geomCrystal = new THREE.IcosahedronGeometry(1.02, 0);
+    const matCrystal = new THREE.MeshStandardMaterial({
+      color: 0x581c87,
+      roughness: 0.04,
+      metalness: 0.95,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.85
+    });
+    const crystal = new THREE.Mesh(geomCrystal, matCrystal);
+    coreGroup.add(crystal);
+
+    // Glowing Neon Hologram Wireframe Shell (EVA Toxic Fluorescent Green)
+    const matWire = new THREE.MeshBasicMaterial({
+      color: 0x00ff66,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.95
+    });
+    const innerWire = new THREE.Mesh(geomCrystal, matWire);
+    innerWire.scale.set(1.03, 1.03, 1.03);
+    coreGroup.add(innerWire);
+
+    // Object B: Dual Concentric Sci-Fi Hologram Orbit Rings (Green & Warning Orange)
+    const geomRing1 = new THREE.TorusGeometry(1.56, 0.022, 16, 64);
+    const matRing1 = new THREE.MeshBasicMaterial({ color: 0x00ff66, transparent: true, opacity: 0.8 });
+    const ring1 = new THREE.Mesh(geomRing1, matRing1);
+    ring1.rotation.x = Math.PI / 3;
+    coreGroup.add(ring1);
+
+    const geomRing2 = new THREE.TorusGeometry(1.82, 0.018, 16, 64);
+    const matRing2 = new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.7 });
+    const ring2 = new THREE.Mesh(geomRing2, matRing2);
+    ring2.rotation.y = Math.PI / 4;
+    coreGroup.add(ring2);
+
+    // Object C: 3D Quantum Ion Dust (Phosphor Green)
+    const particleCount = 85;
+    const geomParticles = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      particlePositions[i] = (Math.random() - 0.5) * 4.2;
+      particlePositions[i + 1] = (Math.random() - 0.5) * 4.2;
+      particlePositions[i + 2] = (Math.random() - 0.5) * 4.2;
+    }
+    geomParticles.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const matParticles = new THREE.PointsMaterial({ color: 0x39ff14, size: 0.048, transparent: true, opacity: 0.85 });
+    const particles = new THREE.Points(geomParticles, matParticles);
+    coreGroup.add(particles);
+
+    // Mouse Parallax Effect
+    let mouseTargetX = 0;
+    let mouseTargetY = 0;
+    container.addEventListener('mousemove', (e) => {
+      const rect = container.getBoundingClientRect();
+      mouseTargetX = ((e.clientX - rect.left) / rect.width - 0.5) * 0.8;
+      mouseTargetY = ((e.clientY - rect.top) / rect.height - 0.5) * 0.8;
+    });
+    container.addEventListener('mouseleave', () => {
+      mouseTargetX = 0;
+      mouseTargetY = 0;
+    });
+
+    // Smooth Spin Loop
+    let spinSpeed = 0.013;
+    let targetSpeed = 0.013;
+    let wasYoloRainbow = false;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      spinSpeed += (targetSpeed - spinSpeed) * 0.05;
+
+      crystal.rotation.x += spinSpeed;
+      crystal.rotation.y += spinSpeed * 1.35;
+      innerWire.rotation.x = crystal.rotation.x;
+      innerWire.rotation.y = crystal.rotation.y;
+
+      ring1.rotation.z += spinSpeed * 1.6;
+      // Iridescent rainbow particles when YOLO is ON
+      if (typeof yoloEnabled !== 'undefined' && yoloEnabled) {
+        const timeNow = performance.now() * 0.0006;
+        const hue = 0.55 + 0.22 * Math.sin(timeNow);
+        matParticles.color.setHSL(hue, 0.85, 0.72);
+        particles.rotation.y += spinSpeed * 0.85;
+        wasYoloRainbow = true;
+      } else {
+        if (wasYoloRainbow) {
+          wasYoloRainbow = false;
+          lastLevelTier = -1;
+          if (cachedStats && cachedStats.level) {
+            updateCoreVisuals(cachedStats.level);
+          } else {
+            matParticles.color.setHex(currentSkin === 'eva' ? 0x39ff14 : 0x67e8f9);
+          }
+        }
+        particles.rotation.y += spinSpeed * 0.45;
+      }
+
+      coreGroup.rotation.y += (mouseTargetX - coreGroup.rotation.y) * 0.05;
+      coreGroup.rotation.x += (-mouseTargetY - coreGroup.rotation.x) * 0.05;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function trigger3DBurst(amount) {
+      targetSpeed = 0.11;
+      const statusEl = document.getElementById('crystal-status');
+
+      if (currentSkin === 'eva') {
+        matWire.color.setHex(0xff3b00); // Flaming Berserk Red-Orange
+        matCrystal.color.setHex(0x7e22ce); // High-voltage Violet
+        ring1.material.color.setHex(0xff3b00);
+        if (statusEl) {
+          statusEl.innerText = (currentLang === 'zh') ? '🔥 BERSERK // 暴走状态!' : '🔥 BERSERK // OVERHEAT!';
+          statusEl.style.color = '#ff3b00';
+        }
+      } else {
+        matCrystal.color.setHex(0x38bdf8);
+        matWire.color.setHex(0xfacc15); // Glowing gold wires
+        if (statusEl) {
+          statusEl.innerText = (currentLang === 'zh') ? '⚡ 脉冲暴击 // +TOKENS' : '⚡ HYPER-BURST // +TOKENS';
+          statusEl.style.color = '#34d399';
+        }
+      }
+
+      setTimeout(() => {
+        targetSpeed = 0.013;
+        lastLevelTier = -1;
+        if (cachedStats && cachedStats.level) {
+          updateCoreVisuals(cachedStats.level);
+        } else {
+          applySkin(currentSkin);
+        }
+        updatePeriodLabels();
+      }, 2500);
+    }
+
+    // -------------------------------------------------------------
+    // PYTHON <-> JS API BRIDGE & CHINESE NUMBERS (万/亿/兆)
+    // -------------------------------------------------------------
+    let lastSeenTokens = null;
+    let isDrawerOpen = false;
+    let cachedStats = null;
+    let selectedPeriod = 'total'; // 'total', 'month', 'week', 'day'
+    let isAnimatingCounter = false;
+    let counterAnimationId = null;
+    let currentDisplayedValue = 0;
+
+    function formatNumberDisplay(n, lang) {
+      if (lang === 'zh') {
+        // 1 Zhao = 10000 Yi (1,000,000,000,000)
+        if (n >= 1000000000000) {
+          return (n / 1000000000000).toFixed(3) + ' 兆';
+        }
+        // 1 Yi = 10000 Wan (100,000,000)
+        if (n >= 100000000) {
+          return (n / 100000000).toFixed(2) + ' 亿';
+        }
+        // 1 Wan = 10000
+        if (n >= 10000) {
+          return (n / 10000).toFixed(1) + ' 万';
+        }
+        return Number(n).toLocaleString();
+      } else {
+        if (n >= 1000000000000) return (n / 1000000000000).toFixed(2) + 'T';
+        if (n >= 1000000000) return (n / 1000000000).toFixed(2) + 'B';
+        if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return Number(n).toLocaleString();
+      }
+    }
+
+    let lastLevelTier = -1;
+    function updateCoreVisuals(level) {
+      const tier = Math.min(5, Math.max(1, Math.ceil(level / 20)));
+      if (tier === lastLevelTier) return;
+      lastLevelTier = tier;
+
+      if (currentSkin === 'eva') {
+        if (tier === 1) { // Lv.1-20: Evangelion Unit-01 Standard
+          matCrystal.color.setHex(0x581c87);
+          matWire.color.setHex(0x00ff66);
+          ring1.material.color.setHex(0x00ff66);
+          ring2.material.color.setHex(0xff5500);
+          matParticles.color.setHex(0x39ff14);
+        } else if (tier === 2) { // Lv.21-40: Sync Rate Elevated
+          matCrystal.color.setHex(0x4c1d95);
+          matWire.color.setHex(0x22c55e);
+          ring1.material.color.setHex(0x10b981);
+          ring2.material.color.setHex(0xf97316);
+          matParticles.color.setHex(0x4ade80);
+        } else if (tier === 3) { // Lv.41-60: Awakened Beast Mode
+          matCrystal.color.setHex(0x6b21a8);
+          matWire.color.setHex(0x00ff66);
+          ring1.material.color.setHex(0xa855f7);
+          ring2.material.color.setHex(0xff7700);
+          matParticles.color.setHex(0x86efac);
+        } else if (tier === 4) { // Lv.61-80: Pseudo-Deification
+          matCrystal.color.setHex(0x7e22ce);
+          matWire.color.setHex(0xfacc15);
+          ring1.material.color.setHex(0x00ff66);
+          ring2.material.color.setHex(0xfbbf24);
+          matParticles.color.setHex(0xfef08a);
+        } else { // Lv.81-100: True Berserk Singularity
+          matCrystal.color.setHex(0x15803d);
+          matWire.color.setHex(0x00ff66);
+          ring1.material.color.setHex(0xc026d3);
+          ring2.material.color.setHex(0xff3b00);
+          matParticles.color.setHex(0x38bdf8);
+        }
+        return;
+      }
+
+      // Default Cyan Mode
+      if (tier === 1) { // Lv.1-20: Cold Blue Titanium
+        matCrystal.color.setHex(0x0284c7);
+        matWire.color.setHex(0x38bdf8);
+        ring1.material.color.setHex(0x0284c7);
+        ring2.material.color.setHex(0x38bdf8);
+        matParticles.color.setHex(0x67e8f9);
+      } else if (tier === 2) { // Lv.21-40: Cyan Neon
+        matCrystal.color.setHex(0x06b6d4);
+        matWire.color.setHex(0x67e8f9);
+        ring1.material.color.setHex(0x22d3ee);
+        ring2.material.color.setHex(0x10b981);
+        matParticles.color.setHex(0x22d3ee);
+      } else if (tier === 3) { // Lv.41-60: Violet & Gold
+        matCrystal.color.setHex(0x7c3aed);
+        matWire.color.setHex(0xf59e0b);
+        ring1.material.color.setHex(0xa855f7);
+        ring2.material.color.setHex(0xfbbf24);
+        matParticles.color.setHex(0xc084fc);
+      } else if (tier === 4) { // Lv.61-80: Solar Corona Gold
+        matCrystal.color.setHex(0xd97706);
+        matWire.color.setHex(0xfef08a);
+        ring1.material.color.setHex(0xf59e0b);
+        ring2.material.color.setHex(0xfb923c);
+        matParticles.color.setHex(0xfde047);
+      } else { // Lv.81-100: Singularity Void
+        matCrystal.color.setHex(0xdb2777);
+        matWire.color.setHex(0x00f2fe);
+        ring1.material.color.setHex(0xec4899);
+        ring2.material.color.setHex(0x38bdf8);
+        matParticles.color.setHex(0x38bdf8);
+      }
+    }
+
+    function togglePeriodMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('period-menu');
+      if (!menu) return;
+      menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function closePeriodMenu() {
+      const menu = document.getElementById('period-menu');
+      if (menu) menu.style.display = 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('period-menu');
+      const container = document.getElementById('canvas-container');
+      if (menu && menu.style.display === 'flex') {
+        if (!menu.contains(e.target) && !container.contains(e.target)) {
+          closePeriodMenu();
+        }
+      }
+    });
+
+    function selectPeriod(period) {
+      closePeriodMenu();
+      if (selectedPeriod === period && !isAnimatingCounter) return;
+      selectedPeriod = period;
+
+      ['total', 'month', 'week', 'day'].forEach(p => {
+        const el = document.getElementById(`p-opt-${p}`);
+        if (el) {
+          el.className = 'period-item' + (p === period ? ' active' : '');
+        }
+      });
+
+      updatePeriodLabels();
+
+      if (cachedStats) {
+        const periods = cachedStats.periods || {};
+        const targetVal = (periods[period] !== undefined) ? periods[period] : (cachedStats.total_tokens || 0);
+        animateNumberFromZero(targetVal, 850);
+      }
+
+      triggerPeriodVisuals(period);
+    }
+
+    function animateNumberFromZero(targetVal, duration = 850) {
+      if (counterAnimationId) {
+        cancelAnimationFrame(counterAnimationId);
+        counterAnimationId = null;
+      }
+
+      isAnimatingCounter = true;
+      const startTime = performance.now();
+      const lbl = document.getElementById('lbl-total');
+
+      function easeOutExpo(x) {
+        return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+      }
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = easeOutExpo(progress);
+        const current = Math.floor(targetVal * eased);
+
+        currentDisplayedValue = current;
+        lbl.innerText = formatNumberDisplay(current, currentLang);
+
+        if (progress < 1) {
+          counterAnimationId = requestAnimationFrame(step);
+        } else {
+          currentDisplayedValue = targetVal;
+          lbl.innerText = formatNumberDisplay(targetVal, currentLang);
+          isAnimatingCounter = false;
+          counterAnimationId = null;
+        }
+      }
+
+      counterAnimationId = requestAnimationFrame(step);
+    }
+
+    function triggerPeriodVisuals(period) {
+      if (currentSkin === 'eva') {
+        if (period === 'day') {
+          targetSpeed = 0.06;
+          matCrystal.color.setHex(0x581c87);
+          matWire.color.setHex(0x00ff66);
+        } else if (period === 'week') {
+          targetSpeed = 0.075;
+          matCrystal.color.setHex(0x4c1d95);
+          matWire.color.setHex(0xff7700);
+        } else if (period === 'month') {
+          targetSpeed = 0.09;
+          matCrystal.color.setHex(0x6b21a8);
+          matWire.color.setHex(0xa855f7);
+        } else {
+          targetSpeed = 0.11;
+          matCrystal.color.setHex(0x7e22ce);
+          matWire.color.setHex(0x00ff66);
+        }
+      } else {
+        if (period === 'day') {
+          targetSpeed = 0.055;
+          matCrystal.color.setHex(0x0284c7);
+          matWire.color.setHex(0x38bdf8);
+        } else if (period === 'week') {
+          targetSpeed = 0.07;
+          matCrystal.color.setHex(0x06b6d4);
+          matWire.color.setHex(0x67e8f9);
+        } else if (period === 'month') {
+          targetSpeed = 0.085;
+          matCrystal.color.setHex(0x7c3aed);
+          matWire.color.setHex(0xa855f7);
+        } else {
+          targetSpeed = 0.105;
+          matCrystal.color.setHex(0x0284c7);
+          matWire.color.setHex(0xfacc15);
+        }
+      }
+
+      setTimeout(() => {
+        targetSpeed = 0.013;
+        lastLevelTier = -1;
+        if (cachedStats && cachedStats.level) {
+          updateCoreVisuals(cachedStats.level);
+        }
+      }, 1800);
+    }
+
+    function updatePeriodLabels() {
+      const isZh = (currentLang === 'zh');
+      const isEva = (currentSkin === 'eva');
+      const statusEl = document.getElementById('crystal-status');
+
+      const suffixZh = isEva ? ' // EVA-01' : ' // 3D CORE';
+      const suffixEn = isEva ? ' // EVA-01' : ' // 3D CORE';
+
+      const titlesZh = {
+        'day': '⚡ 今日 (24H)' + suffixZh,
+        'week': '📅 本周 (7D)' + suffixZh,
+        'month': '🗓️ 本月 (30D)' + suffixZh,
+        'total': isEva ? '🪐 累计 (ALL) // EVA-01' : '🪐 累计 (ALL) // CLICK CORE'
+      };
+      const titlesEn = {
+        'day': '⚡ TODAY (24H)' + suffixEn,
+        'week': '📅 WEEK (7D)' + suffixEn,
+        'month': '🗓️ MONTH (30D)' + suffixEn,
+        'total': isEva ? '🪐 ALL TIME // EVA-01' : '🪐 ALL TIME // CLICK CORE'
+      };
+
+      if (statusEl) {
+        statusEl.innerText = isZh ? titlesZh[selectedPeriod] : titlesEn[selectedPeriod];
+        statusEl.style.color = isEva ? '#00ff66' : '#38bdf8';
+      }
+
+      const nameTotal = document.getElementById('p-name-total');
+      const nameMonth = document.getElementById('p-name-month');
+      const nameWeek = document.getElementById('p-name-week');
+      const nameDay = document.getElementById('p-name-day');
+
+      if (nameTotal) nameTotal.innerText = isZh ? '累计 (ALL)' : 'All-Time (ALL)';
+      if (nameMonth) nameMonth.innerText = isZh ? '本月 (30D)' : 'Month (30D)';
+      if (nameWeek) nameWeek.innerText = isZh ? '本周 (7D)' : 'Week (7D)';
+      if (nameDay) nameDay.innerText = isZh ? '本日 (24H)' : 'Today (24H)';
+    }
+
+    function applySkin(skinId) {
+      currentSkin = (skinId === 'cyan') ? 'cyan' : 'eva';
+      const container = document.getElementById('main-container');
+      if (container) {
+        container.className = 'holo-container' + (currentSkin === 'eva' ? ' theme-eva' : '');
+      }
+
+      const optCyan = document.getElementById('skin-opt-cyan');
+      const optEva = document.getElementById('skin-opt-eva');
+      if (optCyan && optEva) {
+        optCyan.className = 'lang-pill' + (currentSkin === 'cyan' ? ' active' : '');
+        optEva.className = 'lang-pill' + (currentSkin === 'eva' ? ' active' : '');
+      }
+
+      const rankTagEl = document.getElementById('lbl-rank-tag');
+      if (rankTagEl) {
+        rankTagEl.innerText = (currentSkin === 'eva') ? 'SYNC' : 'RANK';
+      }
+
+      const expTitleEl = document.getElementById('lbl-exp-title');
+      if (expTitleEl) {
+        expTitleEl.innerText = (currentSkin === 'eva') ? 'SYNC RATE PROGRESS' : 'EXP PROGRESS';
+      }
+
+      const headerTitleEl = document.getElementById('header-title');
+      if (headerTitleEl) {
+        if (currentSkin === 'eva') {
+          headerTitleEl.innerText = (currentLang === 'zh') ? 'EVA-01 TEST TYPE // 初号机全息核心' : 'EVA-01 TEST TYPE // NERV HUD';
+        } else {
+          headerTitleEl.innerText = (currentLang === 'zh') ? 'QUANTUM CORE // 3D 全息算力核' : 'QUANTUM CORE // 3D HUD';
+        }
+      }
+
+      const shareLbl = document.getElementById('lbl-btn-share');
+      if (shareLbl) {
+        if (currentSkin === 'eva') {
+          shareLbl.innerText = (currentLang === 'zh') ? '⚡ 同步战报' : '⚡ SYNC REPORT';
+        } else {
+          shareLbl.innerText = (currentLang === 'zh') ? '🔥 分享战报' : '🔥 SHARE REPORT';
+        }
+      }
+
+      // Update Three.js lights & materials
+      if (currentSkin === 'eva') {
+        ambientLight.color.setHex(0x2e0854);
+        ambientLight.intensity = 3.2;
+        pointLight1.color.setHex(0x00ff66);
+        pointLight1.intensity = 3.8;
+        pointLight2.color.setHex(0xa855f7);
+        pointLight2.intensity = 3.0;
+
+        matCrystal.color.setHex(0x581c87);
+        matCrystal.roughness = 0.04;
+        matCrystal.metalness = 0.95;
+        matWire.color.setHex(0x00ff66);
+        ring1.material.color.setHex(0x00ff66);
+        ring2.material.color.setHex(0xff5500);
+        matParticles.color.setHex(0x39ff14);
+      } else {
+        ambientLight.color.setHex(0x0c254d);
+        ambientLight.intensity = 2.8;
+        pointLight1.color.setHex(0x38bdf8);
+        pointLight1.intensity = 3.5;
+        pointLight2.color.setHex(0x818cf8);
+        pointLight2.intensity = 2.5;
+
+        matCrystal.color.setHex(0x0284c7);
+        matCrystal.roughness = 0.05;
+        matCrystal.metalness = 0.9;
+        matWire.color.setHex(0x7dd3fc);
+        ring1.material.color.setHex(0x38bdf8);
+        ring2.material.color.setHex(0x818cf8);
+        matParticles.color.setHex(0x67e8f9);
+      }
+
+      lastLevelTier = -1;
+      if (cachedStats && cachedStats.level) {
+        updateCoreVisuals(cachedStats.level);
+      }
+      updatePeriodLabels();
+    }
+
+    async function selectSkin(skinId) {
+      applySkin(skinId);
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          await window.pywebview.api.set_skin(skinId);
+        } catch (e) {
+          console.error('Error setting skin:', e);
+        }
+      }
+    }
+
+    async function toggleYolo() {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.toggle_yolo) {
+        try {
+          const res = await window.pywebview.api.toggle_yolo();
+          updateYoloUI(res);
+        } catch (e) {
+          console.error('YOLO toggle error:', e);
+        }
+      } else {
+        yoloEnabled = !yoloEnabled;
+        updateYoloUI({ enabled: yoloEnabled, clicks_total: yoloClicks });
+      }
+    }
+
+    function updateYoloUI(status) {
+      if (!status) return;
+      yoloEnabled = !!status.enabled;
+      yoloClicks = status.clicks_total || 0;
+      const btn = document.getElementById('btn-yolo');
+      if (!btn) return;
+      if (yoloEnabled) {
+        btn.classList.add('active');
+        btn.innerText = yoloClicks > 0 ? `⚡ YOLO: ON (${yoloClicks})` : `⚡ YOLO: ON`;
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = `⚡ YOLO: OFF`;
+      }
+    }
+
+    function updateUI(stats) {
+      if (!stats) return;
+      cachedStats = stats;
+      currentLang = stats.lang || currentLang;
+
+      if (stats.skin && stats.skin !== currentSkin) {
+        applySkin(stats.skin);
+      }
+
+      if (stats.yolo) {
+        if (yoloInitialized && stats.yolo.clicks_total > yoloClicks) {
+          onBurstEvent(1000);
+        }
+        yoloInitialized = true;
+        updateYoloUI(stats.yolo);
+      }
+
+      const total = stats.total_tokens || 0;
+
+      if (lastSeenTokens !== null && total > lastSeenTokens) {
+        const delta = total - lastSeenTokens;
+        onBurstEvent(delta);
+      }
+
+      const periods = stats.periods || {};
+      const currentPeriodVal = (periods[selectedPeriod] !== undefined) ? periods[selectedPeriod] : total;
+
+      if (lastSeenTokens === null) {
+        // Initial load: animate smoothly up from zero
+        animateNumberFromZero(currentPeriodVal, 850);
+      } else if (!isAnimatingCounter) {
+        document.getElementById('lbl-total').innerText = formatNumberDisplay(currentPeriodVal, currentLang);
+      }
+
+      lastSeenTokens = total;
+
+      // Level (Top Distinctive Sci-Fi Badge - Just LV X)
+      const lv = stats.level || 1;
+      document.getElementById('lbl-level').innerText = `LV.${lv}`;
+
+      // XP Progress Bar - Only %
+      const pct = stats.level_pct || 0;
+      document.getElementById('xp-bar').style.width = `${Math.min(100, Math.max(2, pct))}%`;
+      document.getElementById('lbl-xp-pct').innerText = `${pct.toFixed(1)}%`;
+
+      // Update 3D Visuals based on Level
+      if (!isAnimatingCounter) {
+        updateCoreVisuals(lv);
+      }
+      updatePeriodLabels();
+    }
+
+    function openSettings() {
+      const modal = document.getElementById('settings-modal');
+      modal.style.display = 'flex';
+      updateSettingsUI();
+    }
+
+    function closeSettings() {
+      const modal = document.getElementById('settings-modal');
+      modal.style.display = 'none';
+    }
+
+    function updateSettingsUI() {
+      const isZh = (currentLang === 'zh');
+      document.getElementById('lang-opt-zh').className = 'lang-pill' + (isZh ? ' active' : '');
+      document.getElementById('lang-opt-en').className = 'lang-pill' + (!isZh ? ' active' : '');
+      
+      const optCyan = document.getElementById('skin-opt-cyan');
+      const optEva = document.getElementById('skin-opt-eva');
+      if (optCyan && optEva) {
+        optCyan.className = 'lang-pill' + (currentSkin === 'cyan' ? ' active' : '');
+        optEva.className = 'lang-pill' + (currentSkin === 'eva' ? ' active' : '');
+        optCyan.innerText = isZh ? '🔷 量子冰蓝' : '🔷 Quantum Cyan';
+        optEva.innerText = isZh ? '🟣 EVA 初号机' : '🟣 EVA-01 Test';
+      }
+
+      document.getElementById('lbl-settings-header').innerText = isZh ? '⚙️ 系统设置 // SETTINGS' : '⚙️ SETTINGS // 系统设置';
+      document.getElementById('lbl-sec-skin').innerText = isZh ? '🎨 核心视觉皮肤 (THEME SKIN)' : '🎨 VISUAL CORE SKIN';
+      document.getElementById('lbl-sec-lang').innerText = isZh ? '🌐 界面语言 (LANGUAGE)' : '🌐 LANGUAGE PREFERENCE';
+      document.getElementById('lbl-sec-report').innerText = isZh ? '📢 无法统计工具/网页上报' : '📢 REPORT UNTRACKED TOOL / SITE';
+      document.getElementById('lbl-desc-report').innerText = isZh ? '输入无法统计 Token 的新工具或网页，作者将在后续更新适配：' : 'Report unmonitored tools or web URLs for future updates:';
+      document.getElementById('btn-submit-report').innerText = isZh ? '🚀 提交适配上报' : '🚀 SUBMIT REPORT';
+      document.getElementById('btn-settings').innerText = isZh ? '⚙️ 设置' : '⚙️ Settings';
+
+      if (currentSkin === 'eva') {
+        document.getElementById('header-title').innerText = isZh ? 'EVA-01 TEST TYPE // 初号机全息核心' : 'EVA-01 TEST TYPE // NERV HUD';
+      } else {
+        document.getElementById('header-title').innerText = isZh ? 'QUANTUM CORE // 3D 全息算力核' : 'QUANTUM CORE // 3D HUD';
+      }
+      updatePeriodLabels();
+    }
+
+    async function selectLanguage(lang) {
+      currentLang = lang;
+      updateSettingsUI();
+      const shareLbl = document.getElementById('lbl-btn-share');
+      if (shareLbl) {
+        if (currentSkin === 'eva') {
+          shareLbl.innerText = (currentLang === 'zh') ? '⚡ 同步战报' : '⚡ SYNC REPORT';
+        } else {
+          shareLbl.innerText = (currentLang === 'zh') ? '🔥 分享战报' : '🔥 SHARE REPORT';
+        }
+      }
+      if (window.pywebview && window.pywebview.api) {
+        await window.pywebview.api.set_language(currentLang);
+        const stats = await window.pywebview.api.get_stats();
+        updateUI(stats);
+      }
+    }
+
+    async function submitToolReport() {
+      const nameInput = document.getElementById('report-tool-name');
+      const notesInput = document.getElementById('report-tool-notes');
+      const msgEl = document.getElementById('report-status-msg');
+      const toolName = nameInput.value.trim();
+      const notes = notesInput.value.trim();
+
+      if (!toolName) {
+        msgEl.innerText = (currentLang === 'zh') ? '⚠️ 请输入工具名称或网页网址' : '⚠️ Please enter a tool name or URL';
+        msgEl.style.color = '#f59e0b';
+        return;
+      }
+
+      msgEl.innerText = (currentLang === 'zh') ? '⏳ 正在提交...' : '⏳ Submitting...';
+      msgEl.style.color = (currentSkin === 'eva') ? '#00ff66' : '#38bdf8';
+
+      try {
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.submit_tool_report(toolName, notes);
+        }
+        nameInput.value = '';
+        notesInput.value = '';
+        msgEl.innerText = (currentLang === 'zh') ? '✓ 上报成功！感谢支持，作者后续将适配！' : '✓ Report submitted! Thank you!';
+        msgEl.style.color = '#34d399';
+        setTimeout(() => {
+          msgEl.innerText = '';
+        }, 3500);
+      } catch (err) {
+        msgEl.innerText = 'Error submitting report';
+        msgEl.style.color = '#f43f5e';
+      }
+    }
+
+    let deltaHideTimer = null;
+
+    function showTokenDelta(delta) {
+      if (!delta || delta <= 0) return;
+      const el = document.getElementById('lbl-delta');
+      if (!el) return;
+
+      let text = '';
+      if (currentLang === 'zh') {
+        if (delta >= 100000000) {
+          text = `+${(delta / 100000000).toFixed(1)}亿 ↑`;
+        } else if (delta >= 10000) {
+          text = `+${(delta / 10000).toFixed(1).replace('.0', '')}万 ↑`;
+        } else {
+          text = `+${delta} ↑`;
+        }
+      } else {
+        if (delta >= 1000000) {
+          text = `+${(delta / 1000000).toFixed(1)}M ↑`;
+        } else if (delta >= 1000) {
+          text = `+${(delta / 1000).toFixed(1)}K ↑`;
+        } else {
+          text = `+${delta} ↑`;
+        }
+      }
+
+      el.innerText = text;
+      el.classList.add('visible');
+
+      if (deltaHideTimer) clearTimeout(deltaHideTimer);
+      deltaHideTimer = setTimeout(() => {
+        el.classList.remove('visible');
+      }, 4500);
+    }
+
+    function onBurstEvent(delta) {
+      trigger3DBurst(delta);
+      showTokenDelta(delta);
+      const streakEl = document.getElementById('crystal-status');
+      if (currentSkin === 'eva') {
+        streakEl.innerText = (currentLang === 'zh') ? `🔥 +${formatNumberDisplay(delta, 'zh')} 暴走暴击!` : `🔥 +${formatNumberDisplay(delta, 'en')} BERSERK!`;
+        streakEl.style.color = '#ff3b00';
+      } else {
+        streakEl.innerText = (currentLang === 'zh') ? `⚡ +${formatNumberDisplay(delta, 'zh')} 脉冲暴击!` : `⚡ +${formatNumberDisplay(delta, 'en')} BURST!`;
+        streakEl.style.color = '#34d399';
+      }
+      setTimeout(() => {
+        updatePeriodLabels();
+      }, 2500);
+    }
+
+    async function pollStats() {
+      try {
+        if (window.pywebview && window.pywebview.api) {
+          const stats = await window.pywebview.api.get_stats();
+          updateUI(stats);
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+      setTimeout(pollStats, 1200);
+    }
+
+    if (window.pywebview && window.pywebview.api) {
+      pollStats();
+    } else {
+      window.addEventListener('pywebviewready', () => {
+        pollStats();
+      });
+      setTimeout(() => {
+        if (!cachedStats) {
+          pollStats();
+        }
+      }, 600);
+    }
+
+    async function pySimulatePulse() {
+      if (window.pywebview && window.pywebview.api) {
+        const delta = await window.pywebview.api.simulate_pulse();
+        onBurstEvent(delta);
+      }
+    }
+
+    async function pyExportPoster() {
+      const shareLbl = document.getElementById('lbl-btn-share');
+      const origText = shareLbl.innerText;
+      shareLbl.innerText = (currentLang === 'zh') ? '⏳ 战报铸造中...' : '⏳ Minting...';
+      try {
+        if (window.pywebview && window.pywebview.api) {
+          await window.pywebview.api.export_poster();
+          shareLbl.innerText = (currentLang === 'zh') ? '✓ 战报已保存至桌面!' : '✓ Saved to Desktop!';
+          setTimeout(() => { shareLbl.innerText = origText; }, 2400);
+        }
+      } catch (e) {
+        shareLbl.innerText = 'Error';
+        setTimeout(() => { shareLbl.innerText = origText; }, 2400);
+      }
+    }
+
+    function pyCloseApp() {
+      if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.close_window();
+      }
+    }
+  </script>
+</body>
+</html>

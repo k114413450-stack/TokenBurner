@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and distribution
+build/
+dist/
+*.exe
+TokenBurner.spec
+
+# Local application data and logs
+*.log
+tool_reports.json
+daily_history.json
+config.json
+ghost_leaderboards.json
+
+# Local temp & scratch
+temp_audio/
+.tempmediaStorage/
+scratch/
+_temp_*
+
+# Local environment
+.env
+venv/
+.venv/
+env/
+.idea/
+.vscode/
+
+# Keep assets images, ignore generated root images
+*.png
+!assets/*.png
+!assets/**/*.png
