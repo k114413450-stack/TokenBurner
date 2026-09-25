@@ -152,16 +152,49 @@ MAX_LEVEL = 100
    cd TokenBurner
    ```
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
+2. **Install dependencies — one double-click, no terminal needed**:
    ```
+   setup.bat
+   ```
+   It creates a private virtualenv in `.venv\` beside the project and
+   pip-installs `requirements.txt` into it (~70 MB, a few minutes on a slow
+   connection). Nothing outside the project folder is touched, and it is
+   safe to run twice.
+
+   The equivalent terminal commands, if you prefer:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\python -m pip install -r requirements.txt
+   ```
+   A plain global `pip install -r requirements.txt` also works, but then the
+   launcher follows whichever `python` happens to be first on your PATH.
+   The venv makes that deterministic and keeps your system Python clean.
 
 3. **Launch TokenBurner**:
-   ```bash
-   # Double-click run_hud_3d.bat OR run in terminal:
-   run_hud_3d.bat
    ```
+   run_hud_3d.bat            :: double-click — silent, no console window
+   run_hud_3d.bat debug      :: from a terminal — keeps the traceback visible
+   ```
+
+### Troubleshooting
+
+**`pywebview is not installed for any Python on this machine`**
+(older builds said `Missing Python packages.`)
+
+Nothing is broken — step 2 simply has not run yet. Double-click
+`setup.bat`. Or just re-run the launcher: it detects this exact situation,
+tells you which interpreter it found, and offers to install for you.
+
+**The HUD flashes and disappears.**
+Run `run_hud_3d.bat debug` from a terminal so the traceback stays on
+screen. The usual cause is a missing Microsoft Edge WebView2 Runtime —
+check whether `C:\Program Files (x86)\Microsoft\EdgeWebView\Application`
+exists. If it does not, install the Evergreen WebView2 Runtime from
+<https://developer.microsoft.com/microsoft-edge/webview2/>.
+
+**Setup says it succeeded but the HUD still will not start.**
+Delete the `.venv\` folder and run `setup.bat` again — a half-finished
+install is the usual reason.
 
 ---
 

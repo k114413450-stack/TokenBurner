@@ -34,6 +34,10 @@ except ImportError:
     from src.model_detector import ModelDetector
     from src.progression import calculate_level, stage_progress, stage_for_level, MAX_LEVEL
 
+# Keep this in sync with the banner in run_hud_3d.bat. It is the only
+# version string the app reports, so it should not drift again.
+APP_VERSION = "1.0.2"
+
 # Where "report an untracked tool" sends people. There is no backend on purpose -
 # the poster and README both promise 100% local, so the honest implementation is
 # to open a prefilled GitHub issue in the user's own browser.
@@ -306,7 +310,7 @@ class HudApi:
             body_lines += ["### 补充说明", notes, ""]
         body_lines += [
             "### 环境",
-            f"- TokenBurner: v1.0.0",
+            f"- TokenBurner: v{APP_VERSION}",
             f"- Platform: Windows",
             "",
             "<!-- 由 TokenBurner HUD 自动生成，请在提交前确认没有隐私信息 -->",
