@@ -18,7 +18,7 @@ echo   TOKENBURNER SETUP - install dependencies
 echo ===================================================
 echo.
 echo This downloads pywebview, Pillow, psutil, numpy,
-echo opencv-python and pyautogui into .venv\ (roughly 70 MB).
+echo opencv-python and pyautogui into .venv\ - roughly 70 MB.
 echo It can take a few minutes on a slow connection.
 echo.
 
@@ -87,7 +87,7 @@ echo.
 echo Step 4/4  Verifying imports ...
 "%TB_VENV_PY%" -c "import webview, PIL, psutil" >nul 2>nul
 if errorlevel 1 goto :verifyfail
-echo   OK   pywebview / Pillow / psutil  (required to start the HUD)
+echo   OK   pywebview / Pillow / psutil  - required to start the HUD
 
 "%TB_VENV_PY%" -c "import numpy, cv2, pyautogui" >nul 2>nul
 if errorlevel 1 (
@@ -95,7 +95,7 @@ if errorlevel 1 (
     echo        The HUD still runs; the optional YOLO auto-approver
     echo        will report itself as unavailable.
 ) else (
-    echo   OK   numpy / opencv / pyautogui  (YOLO auto-approver enabled)
+    echo   OK   numpy / opencv / pyautogui  - YOLO auto-approver enabled
 )
 
 echo.

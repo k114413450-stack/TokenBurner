@@ -143,6 +143,6 @@ if errorlevel 1 (
 :done
 echo.
 echo TokenBurner 3D Quantum Core is running in the top-right corner.
-echo (It has no taskbar entry by design - close it from Task Manager,
-echo  or re-run this launcher to restart it.)
+echo It has no taskbar entry by design - close it from Task Manager,
+echo or re-run this launcher to restart it.
 exit /b 0
