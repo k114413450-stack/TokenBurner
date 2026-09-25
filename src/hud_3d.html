@@ -1566,22 +1566,32 @@
         const q = stats.quality || {};
         const v = stats.verified_tokens || 0;
         const e = stats.estimated_tokens || 0;
+        const m = stats.manual_tokens || 0;
         const zh = (currentLang === 'zh');
-        if (e <= 0) {
+        // A hand-typed config value must never be described as an inference
+        // from real files, so it is called out separately and last.
+        const parts = [];
+        if (v > 0) parts.push(zh ? `实测 ${formatNumberDisplay(v, 'zh')}`
+                                 : `verified ${formatNumberDisplay(v, 'en')}`);
+        if (e > 0) parts.push(zh ? `估算 ${formatNumberDisplay(e, 'zh')}`
+                                 : `est. ${formatNumberDisplay(e, 'en')}`);
+        if (m > 0) parts.push(zh ? `⚠ 手填 ${formatNumberDisplay(m, 'zh')}`
+                                 : `⚠ manual ${formatNumberDisplay(m, 'en')}`);
+        if (parts.length === 0) {
+          prov.innerText = zh ? '暂无数据' : 'NO DATA';
+          prov.style.color = '#94a3b8';
+        } else if (v > 0 && e <= 0 && m <= 0) {
           prov.innerText = zh
             ? `实测用量 · ${q.series_source === 'usage-ledger' ? '按天数据来自用量日志' : ''}`
             : `VERIFIED USAGE${q.series_source === 'usage-ledger' ? ' · daily series from usage log' : ''}`;
           prov.style.color = '#34d399';
         } else if (v <= 0) {
-          prov.innerText = zh
-            ? '⚠ 全部为文件体积估算，非实测用量'
-            : '⚠ ALL ESTIMATED from file size - not measured';
+          prov.innerText = (zh ? '⚠ ' : '⚠ ') + parts.join(' + ')
+            + (zh ? '，非实测用量' : ' - not measured');
           prov.style.color = '#fbbf24';
         } else {
-          prov.innerText = zh
-            ? `实测 ${formatNumberDisplay(v, 'zh')} + 估算 ${formatNumberDisplay(e, 'zh')}`
-            : `verified ${formatNumberDisplay(v, 'en')} + estimated ${formatNumberDisplay(e, 'en')}`;
-          prov.style.color = '#94a3b8';
+          prov.innerText = parts.join(' + ');
+          prov.style.color = m > 0 ? '#fbbf24' : '#94a3b8';
         }
       }
 
@@ -1774,13 +1784,6 @@
           pollStats();
         }
       }, 600);
-    }
-
-    async function pySimulatePulse() {
-      if (window.pywebview && window.pywebview.api) {
-        const delta = await window.pywebview.api.simulate_pulse();
-        onBurstEvent(delta);
-      }
     }
 
     async function pyExportPoster() {

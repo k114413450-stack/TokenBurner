@@ -120,7 +120,12 @@ def generate_poster(stats=None, auto_open=False):
     # tools' own API usage logs with figures guessed from file size, and a guess
     # must be labelled as one on anything that gets published.
     est_tok = int(stats.get("estimated_tokens", 0) or 0)
-    if est_tok > 0 and est_tok < tokens:
+    man_tok = int(stats.get("manual_tokens", 0) or 0)
+    if man_tok > 0:
+        # A hand-typed figure is not evidence, so it is named explicitly rather
+        # than allowed to hide inside the "estimated" bucket.
+        src_note = f"精确数值: {tokens:,} Tokens（其中 {man_tok:,} 为 config.json 手填，非实测）"
+    elif est_tok > 0 and est_tok < tokens:
         src_note = f"精确数值: {tokens:,} Tokens（其中 {est_tok:,} 为文件体积估算）"
     elif est_tok > 0:
         src_note = f"精确数值: {tokens:,} Tokens（全部为文件体积估算）"

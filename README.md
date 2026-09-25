@@ -14,11 +14,15 @@
 ## 🌟 Visual Showcase
 
 <div align="center">
-  <p><b>✨ Real-Time 3D Holographic Floating Desktop HUD (EVA-01 Unit Theme)</b></p>
+  <p><b>✨ Real-Time 3D Holographic Floating Desktop HUD (EVA-01 Unit Theme)</b><br/>
+  <sub>Live total, current level, and a provenance line that states whether the headline number was <i>measured</i> or merely <i>guessed</i>.</sub></p>
   <img src="assets/hud_preview.png" width="460" alt="TokenBurner 3D Holographic HUD Preview" />
   <br/><br/>
-  <p><b>📊 1080x1920 High-Definition Cyber War Report Poster (24H Stock-Style Token Surge)</b></p>
+  <p><b>📊 1080×1920 Cyber War Report Poster</b><br/>
+  <sub>Drawn from your own daily token deltas — the curve is your real burn history, not a decorative stock chart.</sub></p>
   <img src="assets/war_report_preview.png" width="480" alt="TokenBurner War Report Poster" />
+  <br/><br/>
+  <sub>Both images are rendered from the real code on a real machine — no mock-ups, no lorem-ipsum numbers.</sub>
 </div>
 
 ---
@@ -169,6 +173,14 @@ Every figure carries one of two labels, and the UI shows which:
 | :--- | :--- | :--- |
 | **Verified** | Real per-request API usage | The tool's own session log, e.g. WorkBuddy writes `inputTokens` / `outputTokens` / `cached_tokens` per request into `~/.workbuddy/projects/**/*.jsonl` |
 | **Estimated** | Inferred from conversation file size (`bytes / 3.5`) | Tools that keep no usage ledger |
+| **Manual** | A number you typed into `config.json` (`web_tokens` / `api_tokens`) | You — it is neither measured nor inferred, it is a claim |
+
+The three tiers are kept separate on purpose. Manual entries used to be summed
+into `estimated_tokens`, which let a hand-typed figure inherit the credibility
+of a size-based inference; they now carry their own `manual` tier and are
+labelled `⚠ 手填` in the HUD and on the poster, so a typed number can never be
+mistaken for a measured one. Leave `web_tokens` and `api_tokens` at `0` unless
+you are deliberately padding the display.
 
 An earlier version applied the size heuristic to *every* `.db/.json/.log` file
 under a tool's data directory. Measured on a real WorkBuddy install (2.6 GB,
@@ -206,13 +218,13 @@ TokenBurner has no access to your provider's pricing. Edit them to match yours.
 python -m unittest discover -s tests -v
 ```
 
-35 tests, no network, no mouse movement. They cover the usage ledger (duplicate
+38 tests, no network, no mouse movement. They cover the usage ledger (duplicate
 encodings, partial writes, truncation, incremental vs. cold-start agreement,
-cache-aware cost, provenance labels) and the YOLO safety gates (whitelist,
-window geometry, confidence thresholds both ways, absolute click coordinates,
-rate limits, capture isolation). The vision tests run real
-`cv2.matchTemplate` against a synthetic screen with `pyautogui` stubbed, so they
-never touch your mouse.
+cache-aware cost, provenance labels, manual-vs-estimated tier separation) and
+the YOLO safety gates (whitelist, window geometry, confidence thresholds both
+ways, absolute click coordinates, rate limits, capture isolation). The vision
+tests run real `cv2.matchTemplate` against a synthetic screen with `pyautogui`
+stubbed, so they never touch your mouse.
 
 Every case in there is one that actually broke during development — the ledger
 is the core of the app and it is easy to get subtly, silently wrong.
@@ -231,6 +243,22 @@ Community contributions are warmly welcomed! You can help by:
   want one, add it as an opt-in module with a real backend and an explicit
   consent screen. Please keep `src/progression.py` offline-only, and never ship
   simulated/placeholder numbers as if they were real.
+
+### Regenerating the README images
+
+The two screenshots at the top are generated, not hand-captured — please keep
+them that way, so they can never drift away from what the code actually does:
+
+```bash
+pip install playwright && playwright install chromium   # dev-only dependency
+python tools/render_previews.py                         # both images
+python tools/render_previews.py --manual 92765          # preview a config entry
+```
+
+It pulls the real numbers from `scanner.get_full_stats()`, stubs the pywebview
+bridge that `hud_3d.html` reads from, and writes `assets/hud_preview.png` and
+`assets/war_report_preview.png`. If you change the HUD layout or the poster,
+re-run it in the same commit.
 
 ---
 

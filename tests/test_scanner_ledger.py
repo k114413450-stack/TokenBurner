@@ -298,6 +298,47 @@ class LedgerTest(unittest.TestCase):
         )
         self.assertEqual(self.total(), 1250)
 
+    # -- manual config entries -------------------------------------------
+    def write_config(self, **kwargs):
+        cfg = {"nickname": "Tester"}
+        cfg.update(kwargs)
+        p = self.appdata / "TokenBurner" / "config.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(cfg, f)
+        return p
+
+    def test_manual_entry_gets_its_own_tier(self):
+        """A number typed into config.json must not be filed as an estimate.
+
+        `web_tokens` is a leftover from the removed "one-click fake" buttons.
+        It used to be summed into `estimated_tokens`, which let a hand-typed
+        figure claim to be an inference from real files.
+        """
+        self.write(_usage_line("1", 1000))
+        self.write_config(web_tokens=500)
+        stats = self.scanner.get_full_stats(force=True)
+
+        self.assertEqual(stats["verified_tokens"], 1000)
+        self.assertEqual(stats["estimated_tokens"], 0)      # not an estimate
+        self.assertEqual(stats["manual_tokens"], 500)
+        self.assertEqual(stats["data_quality"]["tiers"]["Web"], "manual")
+        self.assertEqual(stats["total_tokens"], 1500)       # still counted once
+
+    def test_manual_tier_is_reported_in_data_quality(self):
+        self.write_config(web_tokens=123, api_tokens=77)
+        stats = self.scanner.get_full_stats(force=True)
+        self.assertEqual(stats["manual_tokens"], 200)
+        self.assertEqual(stats["data_quality"]["manual_tokens"], 200)
+        self.assertEqual(stats["data_quality"]["tiers"]["API"], "manual")
+        self.assertEqual(stats["total_tokens"], 200)
+
+    def test_absent_manual_entries_stay_zero(self):
+        self.write(_usage_line("1", 1000))
+        stats = self.scanner.get_full_stats(force=True)
+        self.assertEqual(stats["manual_tokens"], 0)
+        self.assertNotIn("Web", stats["data_quality"]["tiers"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

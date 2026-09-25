@@ -190,6 +190,7 @@ class HudApi:
         stats["quality"] = quality
         stats["verified_tokens"] = stats.get("verified_tokens", 0)
         stats["estimated_tokens"] = stats.get("estimated_tokens", 0)
+        stats["manual_tokens"] = stats.get("manual_tokens", 0)
 
         stats["yolo"] = self._yolo_status()
         return stats

@@ -70,6 +70,11 @@ CHARS_PER_TOKEN = 3.5
 TIER_VERIFIED = "verified"
 TIER_ESTIMATED = "estimated"
 TIER_UNAVAILABLE = "unavailable"
+# A number the user typed into config.json by hand. It is neither measured nor
+# derived from anything - it is a claim. It used to be folded into
+# `estimated`, which meant a hand-typed figure could pass as an inference from
+# real files. It gets its own tier so the UI can never present it as evidence.
+TIER_MANUAL = "manual"
 
 # Directories that never contain conversation data. Used to keep the byte
 # heuristic away from installed runtimes, caches, logs and telemetry.
@@ -1024,6 +1029,7 @@ def _scan_all(force=False):
     tiers = {}
     verified_total = 0
     estimated_total = 0
+    manual_total = 0
 
     for display, status_key, ledger_src, fn in SCANNER_TABLE:
         try:
@@ -1044,16 +1050,16 @@ def _scan_all(force=False):
     api_tok = int(cfg.get("api_tokens", 0) or 0)
     if web_tok:
         tools["Web"] = web_tok
-        tiers["Web"] = TIER_ESTIMATED
-        statuses["web"] = "manual entry in config.json"
-        estimated_total += web_tok
+        tiers["Web"] = TIER_MANUAL
+        statuses["web"] = "typed into config.json by hand - not measured"
+        manual_total += web_tok
     if api_tok:
         tools["API"] = api_tok
-        tiers["API"] = TIER_ESTIMATED
-        statuses["api"] = "manual entry in config.json"
-        estimated_total += api_tok
+        tiers["API"] = TIER_MANUAL
+        statuses["api"] = "typed into config.json by hand - not measured"
+        manual_total += api_tok
 
-    total_tokens = verified_total + estimated_total
+    total_tokens = verified_total + estimated_total + manual_total
 
     # Ledger-wide totals (not just the tools in SCANNER_TABLE) for the cost model.
     agg_all = {"input": 0, "output": 0, "cached": 0, "reasoning": 0, "messages": 0, "total": 0}
@@ -1080,6 +1086,7 @@ def _scan_all(force=False):
         "total_tokens": total_tokens,
         "verified_tokens": verified_total,
         "estimated_tokens": estimated_total,
+        "manual_tokens": manual_total,
         "est_cost_usd": est_cost_usd,
         "pricing": cfg.get("pricing", {}),
         "ledger": {
@@ -1093,6 +1100,7 @@ def _scan_all(force=False):
         "data_quality": {
             "verified_tokens": verified_total,
             "estimated_tokens": estimated_total,
+            "manual_tokens": manual_total,
             "verified_pct": round(verified_total / total_tokens * 100.0, 1) if total_tokens else 0.0,
             "tiers": tiers,
             "series_source": series_source,
