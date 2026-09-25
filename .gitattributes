@@ -1,0 +1,30 @@
+# Line-ending policy.
+#
+# Why this file exists: this project ships Windows batch launchers. A .bat
+# file with LF-only line endings can break under cmd.exe -- `goto :label`
+# and multi-line if blocks are the first things to misbehave -- and the
+# symptom is confusing because the file looks perfectly fine in an editor.
+#
+# `eol=crlf` makes git store LF internally (clean diffs, works on any
+# platform) but always check CRLF out into the working tree, regardless of
+# what the user's core.autocrlf is set to. Without this, anyone who clones
+# with autocrlf=false silently receives launchers that do not run.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+*.vbs   text eol=crlf
+
+# Never apply any text transformation to binaries: a stray CR byte
+# corrupts them.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.icns  binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.zip   binary
+*.exe   binary
